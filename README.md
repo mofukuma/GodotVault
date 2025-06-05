@@ -15,7 +15,7 @@ Supabaseを使用したユーザー認証とJSONデータ管理システム。
 
 - **Backend**: Node.js + Express.js
 - **Database**: Supabase (PostgreSQL)
-- **Authentication**: Supasupabase db reset --db-url postgresql://postgres:postgres@localhost:54322/postgres --filebase Auth (JWT)
+- **Authentication**: Supabase Auth (JWT)
 - **Security**: Row Level Security (RLS)
 - **Client**: Godot Engine 4.x
 
@@ -68,7 +68,7 @@ Supabaseを使用したユーザー認証とJSONデータ管理システム。
 
 6. **サーバー起動**
    ```bash
-   npm run dev:local
+   npm run dev:local  # 自動リロード機能付き
    ```
 
 ### 本番環境（Supabaseクラウド）
@@ -114,8 +114,6 @@ Supabaseを使用したユーザー認証とJSONデータ管理システム。
 | Method | Endpoint | 説明 | パラメータ |
 |--------|----------|------|---------|
 | PUT | `/data/:key` | データ保存・更新（UPSERT） | `{ "json_data": object }` + 認証ヘッダー |
-| GET | `/data` | 全ユーザーのデータ一覧 | クエリ: `page`, `limit`, `user_id`, `key_pattern` + 認証ヘッダー |
-| GET | `/data/:key` | 特定キーのデータ取得 | クエリ: `user_id` + 認証ヘッダー |
 | GET | `/data/my` | 自分のデータ一覧 | クエリ: `page`, `limit`, `key_pattern` + 認証ヘッダー |
 | GET | `/data/my/:key` | 自分の特定キーのデータ | 認証ヘッダー必須 |
 | GET | `/data/user/:userId` | 特定ユーザーのデータ一覧 | クエリ: `page`, `limit`, `key_pattern` + 認証ヘッダー |
@@ -123,11 +121,12 @@ Supabaseを使用したユーザー認証とJSONデータ管理システム。
 | GET | `/data/key/:key` | 特定キーを持つ全ユーザーのデータ | クエリ: `page`, `limit` + 認証ヘッダー |
 | DELETE | `/data/my/:key` | 自分のデータ削除 | 認証ヘッダー必須 |
 
-### ヘルスチェック
+### ヘルスチェック・API情報
 
 | Method | Endpoint | 説明 |
 |--------|----------|------|
 | GET | `/health` | サーバー状態確認 |
+| GET | `/api/info` | API情報取得 |
 
 ### クエリパラメータ
 
@@ -223,8 +222,8 @@ const allProfilesResponse = await fetch('http://localhost:3000/data/key/profile'
   headers: { 'Authorization': `Bearer ${accessToken}` }
 });
 
-// キーパターンで検索
-const searchResponse = await fetch('http://localhost:3000/data?key_pattern=config&page=1&limit=10', {
+// キーパターンで検索（自分のデータ）
+const searchResponse = await fetch('http://localhost:3000/data/my?key_pattern=config&page=1&limit=10', {
   headers: { 'Authorization': `Bearer ${accessToken}` }
 });
 
@@ -243,7 +242,8 @@ const userProfileResponse = await fetch('http://localhost:3000/data/user/USER_ID
 #### 主な機能
 - シンプルなキー・辞書型データの保存・読み込み
 - 自動セッション管理
-- シグナルベースの非同期処理
+- awaitベースの非同期処理
+- 最小限のシグナル（login_completed、logout_completed）
 - エラーハンドリング
 
 #### 基本的な使用方法
@@ -253,20 +253,19 @@ const userProfileResponse = await fetch('http://localhost:3000/data/user/USER_ID
 var vault = preload("res://GodotVault.gd").new()
 add_child(vault)
 
-# シグナル接続
+# シグナル接続（最小限）
 vault.login_completed.connect(_on_login_completed)
-vault.save_completed.connect(_on_save_completed)
-vault.load_completed.connect(_on_load_completed)
+vault.logout_completed.connect(_on_logout_completed)
 
 # ユーザー登録（ランダムアカウント作成）
-vault.signup()
+var success = await vault.signup()
 
-# データ保存
+# データ保存（awaitパターン）
 var player_data = {"name": "Player", "level": 10, "score": 1500}
-vault.save_data("profile", player_data)
+var save_success = await vault.save_data("profile", player_data)
 
-# データ読み込み
-vault.load_data("profile")
+# データ読み込み（awaitパターン）
+var loaded_data = await vault.load_data("profile")
 ```
 
 ### GodotVault Tester
@@ -292,13 +291,19 @@ vault.load_data("profile")
 
 ```sql
 CREATE TABLE user_data (
-  id SERIAL PRIMARY KEY,
   user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE,
+  key TEXT NOT NULL,
   json_data JSONB NOT NULL,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  PRIMARY KEY (user_id, key)
 );
 ```
+
+### 主な特徴
+- **複合主キー**: `(user_id, key)` により、ユーザーごとにキーの一意性を保証
+- **UPSERT対応**: 同じキーでのデータ保存時は自動的に更新される
+- **JSONB型**: 効率的なJSONデータ格納・検索が可能
 
 ## 🔒 セキュリティ
 
@@ -320,23 +325,29 @@ CREATE TABLE user_data (
 ```json
 {
   "scripts": {
-    "dev:local": "NODE_ENV=local node server.js",
+    "dev": "nodemon server.js",
+    "dev:local": "NODE_ENV=local nodemon server.js",
     "start": "NODE_ENV=production node server.js",
     "supabase:start": "supabase start",
     "supabase:stop": "supabase stop",
     "supabase:reset": "supabase db reset",
     "supabase:link": "supabase link --project-ref YOUR_PROJECT_REF",
-    "supabase:push": "supabase db push"
+    "supabase:push": "supabase db push",
+    "supabase:deploy": "supabase functions deploy"
   }
 }
 ```
+
+### 開発用コマンド
+- `npm run dev` または `npm run dev:local`: 自動リロード機能付きでサーバー起動
+- `npm run start`: 本番環境でサーバー起動
 
 ## 🌐 実用的な使用ケース
 
 ### ゲーム進行状況管理
 
 ```javascript
-POST /data
+PUT /data/profile
 {
   "json_data": {
     "playerName": "Player1",
@@ -354,7 +365,7 @@ POST /data
 ### アプリケーション設定管理
 
 ```javascript
-POST /data
+PUT /data/settings
 {
   "json_data": {
     "theme": "dark",
