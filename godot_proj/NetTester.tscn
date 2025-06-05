@@ -1,0 +1,165 @@
+[gd_scene load_steps=2 format=3 uid="uid://b8j4xm3kq2x3n"]
+
+[ext_resource type="Script" path="res://NetTester.gd" id="1_nettester"]
+
+[node name="NetTester" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_nettester")
+
+[node name="VBoxContainer" type="VBoxContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 20.0
+offset_top = 20.0
+offset_right = -20.0
+offset_bottom = -20.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Title" type="Label" parent="VBoxContainer"]
+layout_mode = 2
+text = "Net.gd Module Tester"
+horizontal_alignment = 1
+
+[node name="HSeparator" type="HSeparator" parent="VBoxContainer"]
+layout_mode = 2
+
+[node name="APIKeyContainer" type="VBoxContainer" parent="VBoxContainer"]
+layout_mode = 2
+
+[node name="APIKeyTitle" type="Label" parent="VBoxContainer/APIKeyContainer"]
+layout_mode = 2
+text = "OpenAI API設定"
+
+[node name="APIKeyRow" type="HBoxContainer" parent="VBoxContainer/APIKeyContainer"]
+layout_mode = 2
+
+[node name="APIKeyLabel" type="Label" parent="VBoxContainer/APIKeyContainer/APIKeyRow"]
+custom_minimum_size = Vector2(80, 0)
+layout_mode = 2
+text = "APIキー:"
+
+[node name="APIKeyInput" type="LineEdit" parent="VBoxContainer/APIKeyContainer/APIKeyRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+placeholder_text = "sk-..."
+secret = true
+
+[node name="SetAPIKeyButton" type="Button" parent="VBoxContainer/APIKeyContainer/APIKeyRow"]
+layout_mode = 2
+text = "設定"
+
+[node name="HSeparator2" type="HSeparator" parent="VBoxContainer"]
+layout_mode = 2
+
+[node name="URLContainer" type="VBoxContainer" parent="VBoxContainer"]
+layout_mode = 2
+
+[node name="URLTitle" type="Label" parent="VBoxContainer/URLContainer"]
+layout_mode = 2
+text = "URL取得テスト"
+
+[node name="URLRow" type="HBoxContainer" parent="VBoxContainer/URLContainer"]
+layout_mode = 2
+
+[node name="URLLabel" type="Label" parent="VBoxContainer/URLContainer/URLRow"]
+custom_minimum_size = Vector2(80, 0)
+layout_mode = 2
+text = "URL:"
+
+[node name="URLInput" type="LineEdit" parent="VBoxContainer/URLContainer/URLRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+placeholder_text = "https://example.com"
+
+[node name="TestURLButton" type="Button" parent="VBoxContainer/URLContainer/URLRow"]
+layout_mode = 2
+text = "取得テスト"
+
+[node name="HSeparator3" type="HSeparator" parent="VBoxContainer"]
+layout_mode = 2
+
+[node name="GPTContainer" type="VBoxContainer" parent="VBoxContainer"]
+layout_mode = 2
+
+[node name="GPTTitle" type="Label" parent="VBoxContainer/GPTContainer"]
+layout_mode = 2
+text = "OpenAI GPT APIテスト"
+
+[node name="PromptRow" type="HBoxContainer" parent="VBoxContainer/GPTContainer"]
+layout_mode = 2
+
+[node name="PromptLabel" type="Label" parent="VBoxContainer/GPTContainer/PromptRow"]
+custom_minimum_size = Vector2(80, 0)
+layout_mode = 2
+text = "プロンプト:"
+
+[node name="PromptInput" type="LineEdit" parent="VBoxContainer/GPTContainer/PromptRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+placeholder_text = "何か質問を入力..."
+
+[node name="GPTButtonsRow" type="HBoxContainer" parent="VBoxContainer/GPTContainer"]
+layout_mode = 2
+
+[node name="TestGPTButton" type="Button" parent="VBoxContainer/GPTContainer/GPTButtonsRow"]
+layout_mode = 2
+text = "GPTテスト"
+
+[node name="TestGPTJSONButton" type="Button" parent="VBoxContainer/GPTContainer/GPTButtonsRow"]
+layout_mode = 2
+text = "GPT JSONテスト"
+
+[node name="HSeparator4" type="HSeparator" parent="VBoxContainer"]
+layout_mode = 2
+
+[node name="ParallelContainer" type="VBoxContainer" parent="VBoxContainer"]
+layout_mode = 2
+
+[node name="ParallelTitle" type="Label" parent="VBoxContainer/ParallelContainer"]
+layout_mode = 2
+text = "並列取得テスト"
+
+[node name="TestParallelButton" type="Button" parent="VBoxContainer/ParallelContainer"]
+layout_mode = 2
+text = "並列URL取得テスト（httpbin.org）"
+
+[node name="HSeparator5" type="HSeparator" parent="VBoxContainer"]
+layout_mode = 2
+
+[node name="LogSection" type="VBoxContainer" parent="VBoxContainer"]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="LogTitle" type="Label" parent="VBoxContainer/LogSection"]
+layout_mode = 2
+text = "ログ"
+
+[node name="LogScroll" type="ScrollContainer" parent="VBoxContainer/LogSection"]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="LogText" type="RichTextLabel" parent="VBoxContainer/LogSection/LogScroll"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+bbcode_enabled = true
+text = "[color=green]Net.gd Tester が開始されました[/color]"
+
+[node name="ClearLogButton" type="Button" parent="VBoxContainer/LogSection"]
+layout_mode = 2
+text = "ログクリア"
+
+[connection signal="pressed" from="VBoxContainer/APIKeyContainer/APIKeyRow/SetAPIKeyButton" to="." method="_on_set_api_key_button_pressed"]
+[connection signal="pressed" from="VBoxContainer/URLContainer/URLRow/TestURLButton" to="." method="_on_test_url_button_pressed"]
+[connection signal="pressed" from="VBoxContainer/GPTContainer/GPTButtonsRow/TestGPTButton" to="." method="_on_test_gpt_button_pressed"]
+[connection signal="pressed" from="VBoxContainer/GPTContainer/GPTButtonsRow/TestGPTJSONButton" to="." method="_on_test_gpt_json_button_pressed"]
+[connection signal="pressed" from="VBoxContainer/ParallelContainer/TestParallelButton" to="." method="_on_test_parallel_button_pressed"]
+[connection signal="pressed" from="VBoxContainer/LogSection/ClearLogButton" to="." method="_on_clear_log_button_pressed"]
