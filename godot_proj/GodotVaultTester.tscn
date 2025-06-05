@@ -1,0 +1,218 @@
+[gd_scene load_steps=3 format=3 uid="uid://cpjdlpb4p2x3m"]
+
+[ext_resource type="Script" path="res://GodotVaultTester.gd" id="1_wjwho"]
+[ext_resource type="Script" path="res://GodotVault.gd" id="2_vault"]
+
+[node name="GodotVaultTester" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_wjwho")
+
+[node name="GodotVault" type="Node" parent="."]
+script = ExtResource("2_vault")
+
+[node name="VBoxContainer" type="VBoxContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 20.0
+offset_top = 20.0
+offset_right = -20.0
+offset_bottom = -20.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Title" type="Label" parent="VBoxContainer"]
+layout_mode = 2
+text = "GodotVault API Tester"
+horizontal_alignment = 1
+
+[node name="HSeparator" type="HSeparator" parent="VBoxContainer"]
+layout_mode = 2
+
+[node name="AuthSection" type="VBoxContainer" parent="VBoxContainer"]
+layout_mode = 2
+
+[node name="AuthTitle" type="Label" parent="VBoxContainer/AuthSection"]
+layout_mode = 2
+text = "認証"
+
+[node name="AuthButtons" type="HBoxContainer" parent="VBoxContainer/AuthSection"]
+layout_mode = 2
+
+[node name="SignupButton" type="Button" parent="VBoxContainer/AuthSection/AuthButtons"]
+layout_mode = 2
+text = "ランダムユーザー登録"
+
+[node name="LoginButton" type="Button" parent="VBoxContainer/AuthSection/AuthButtons"]
+layout_mode = 2
+text = "ログイン/ログアウト"
+
+[node name="StatusLabel" type="Label" parent="VBoxContainer/AuthSection"]
+layout_mode = 2
+text = "ログアウト中"
+
+[node name="HSeparator2" type="HSeparator" parent="VBoxContainer"]
+layout_mode = 2
+
+[node name="DataSection" type="VBoxContainer" parent="VBoxContainer"]
+layout_mode = 2
+
+[node name="DataTitle" type="Label" parent="VBoxContainer/DataSection"]
+layout_mode = 2
+text = "データ操作"
+
+[node name="SaveContainer" type="VBoxContainer" parent="VBoxContainer/DataSection"]
+layout_mode = 2
+
+[node name="SaveTitle" type="Label" parent="VBoxContainer/DataSection/SaveContainer"]
+layout_mode = 2
+text = "データ保存"
+
+[node name="KeyContainer" type="HBoxContainer" parent="VBoxContainer/DataSection/SaveContainer"]
+layout_mode = 2
+
+[node name="KeyLabel" type="Label" parent="VBoxContainer/DataSection/SaveContainer/KeyContainer"]
+custom_minimum_size = Vector2(60, 0)
+layout_mode = 2
+text = "キー:"
+
+[node name="KeyInput" type="LineEdit" parent="VBoxContainer/DataSection/SaveContainer/KeyContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+placeholder_text = "例: profile, settings, score"
+
+[node name="ValueContainer" type="HBoxContainer" parent="VBoxContainer/DataSection/SaveContainer"]
+layout_mode = 2
+
+[node name="ValueLabel" type="Label" parent="VBoxContainer/DataSection/SaveContainer/ValueContainer"]
+custom_minimum_size = Vector2(60, 0)
+layout_mode = 2
+text = "データ:"
+
+[node name="ValueInput" type="TextEdit" parent="VBoxContainer/DataSection/SaveContainer/ValueContainer"]
+custom_minimum_size = Vector2(0, 60)
+layout_mode = 2
+size_flags_horizontal = 3
+placeholder_text = "JSON形式またはテキスト
+例: {\"name\":\"Player\", \"level\":10}"
+
+[node name="SaveButton" type="Button" parent="VBoxContainer/DataSection/SaveContainer"]
+layout_mode = 2
+text = "保存"
+
+[node name="LoadContainer" type="VBoxContainer" parent="VBoxContainer/DataSection"]
+layout_mode = 2
+
+[node name="LoadTitle" type="Label" parent="VBoxContainer/DataSection/LoadContainer"]
+layout_mode = 2
+text = "データ読み込み"
+
+[node name="LoadKeyContainer" type="HBoxContainer" parent="VBoxContainer/DataSection/LoadContainer"]
+layout_mode = 2
+
+[node name="LoadKeyLabel" type="Label" parent="VBoxContainer/DataSection/LoadContainer/LoadKeyContainer"]
+custom_minimum_size = Vector2(60, 0)
+layout_mode = 2
+text = "キー:"
+
+[node name="LoadKeyInput" type="LineEdit" parent="VBoxContainer/DataSection/LoadContainer/LoadKeyContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+placeholder_text = "読み込むキー名"
+
+[node name="LoadButton" type="Button" parent="VBoxContainer/DataSection/LoadContainer/LoadKeyContainer"]
+layout_mode = 2
+text = "読み込み"
+
+[node name="DeleteButton" type="Button" parent="VBoxContainer/DataSection/LoadContainer/LoadKeyContainer"]
+layout_mode = 2
+text = "削除"
+
+[node name="QuickTestContainer" type="VBoxContainer" parent="VBoxContainer/DataSection"]
+layout_mode = 2
+
+[node name="QuickTestTitle" type="Label" parent="VBoxContainer/DataSection/QuickTestContainer"]
+layout_mode = 2
+text = "クイックテスト"
+
+[node name="QuickTestButtons" type="HBoxContainer" parent="VBoxContainer/DataSection/QuickTestContainer"]
+layout_mode = 2
+
+[node name="SaveProfileButton" type="Button" parent="VBoxContainer/DataSection/QuickTestContainer/QuickTestButtons"]
+layout_mode = 2
+text = "プロフィール保存"
+
+[node name="SaveSettingsButton" type="Button" parent="VBoxContainer/DataSection/QuickTestContainer/QuickTestButtons"]
+layout_mode = 2
+text = "設定保存"
+
+[node name="SaveScoreButton" type="Button" parent="VBoxContainer/DataSection/QuickTestContainer/QuickTestButtons"]
+layout_mode = 2
+text = "スコア保存"
+
+[node name="ListContainer" type="VBoxContainer" parent="VBoxContainer/DataSection"]
+layout_mode = 2
+
+[node name="ListTitle" type="Label" parent="VBoxContainer/DataSection/ListContainer"]
+layout_mode = 2
+text = "データ一覧・検索"
+
+[node name="ListButtons" type="HBoxContainer" parent="VBoxContainer/DataSection/ListContainer"]
+layout_mode = 2
+
+[node name="GetMyListButton" type="Button" parent="VBoxContainer/DataSection/ListContainer/ListButtons"]
+layout_mode = 2
+text = "自分のデータ一覧"
+
+[node name="SearchProfileButton" type="Button" parent="VBoxContainer/DataSection/ListContainer/ListButtons"]
+layout_mode = 2
+text = "プロフィール検索"
+
+[node name="SearchScoreButton" type="Button" parent="VBoxContainer/DataSection/ListContainer/ListButtons"]
+layout_mode = 2
+text = "スコア検索"
+
+[node name="HSeparator3" type="HSeparator" parent="VBoxContainer"]
+layout_mode = 2
+
+[node name="LogSection" type="VBoxContainer" parent="VBoxContainer"]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="LogTitle" type="Label" parent="VBoxContainer/LogSection"]
+layout_mode = 2
+text = "ログ"
+
+[node name="LogScroll" type="ScrollContainer" parent="VBoxContainer/LogSection"]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="LogText" type="RichTextLabel" parent="VBoxContainer/LogSection/LogScroll"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+bbcode_enabled = true
+text = "[color=green]GodotVault API Tester が開始されました[/color]"
+
+[node name="ClearLogButton" type="Button" parent="VBoxContainer/LogSection"]
+layout_mode = 2
+text = "ログクリア"
+
+[connection signal="pressed" from="VBoxContainer/AuthSection/AuthButtons/SignupButton" to="." method="_on_signup_button_pressed"]
+[connection signal="pressed" from="VBoxContainer/AuthSection/AuthButtons/LoginButton" to="." method="_on_login_button_pressed"]
+[connection signal="pressed" from="VBoxContainer/DataSection/SaveContainer/SaveButton" to="." method="_on_save_button_pressed"]
+[connection signal="pressed" from="VBoxContainer/DataSection/LoadContainer/LoadKeyContainer/LoadButton" to="." method="_on_load_button_pressed"]
+[connection signal="pressed" from="VBoxContainer/DataSection/LoadContainer/LoadKeyContainer/DeleteButton" to="." method="_on_delete_button_pressed"]
+[connection signal="pressed" from="VBoxContainer/DataSection/QuickTestContainer/QuickTestButtons/SaveProfileButton" to="." method="_on_save_profile_button_pressed"]
+[connection signal="pressed" from="VBoxContainer/DataSection/QuickTestContainer/QuickTestButtons/SaveSettingsButton" to="." method="_on_save_settings_button_pressed"]
+[connection signal="pressed" from="VBoxContainer/DataSection/QuickTestContainer/QuickTestButtons/SaveScoreButton" to="." method="_on_save_score_button_pressed"]
+[connection signal="pressed" from="VBoxContainer/DataSection/ListContainer/ListButtons/GetMyListButton" to="." method="_on_get_my_list_button_pressed"]
+[connection signal="pressed" from="VBoxContainer/DataSection/ListContainer/ListButtons/SearchProfileButton" to="." method="_on_search_profile_button_pressed"]
+[connection signal="pressed" from="VBoxContainer/DataSection/ListContainer/ListButtons/SearchScoreButton" to="." method="_on_search_score_button_pressed"]
+[connection signal="pressed" from="VBoxContainer/LogSection/ClearLogButton" to="." method="_on_clear_log_button_pressed"]

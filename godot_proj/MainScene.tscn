@@ -1,0 +1,362 @@
+[gd_scene load_steps=2 format=3 uid="uid://c7nolwy7h684d"]
+
+[sub_resource type="GDScript" id="GDScript_7nygr"]
+script/source = "extends Control
+
+@onready var register_button = $VBoxContainer/UserSection/UserButtonsContainer/RegisterButton
+@onready var login_button = $VBoxContainer/UserSection/UserButtonsContainer/LoginButton
+@onready var status_label = $VBoxContainer/UserSection/StatusLabel
+@onready var key_input = $VBoxContainer/DataSection/KeyContainer/KeyInput
+@onready var value_input = $VBoxContainer/DataSection/ValueContainer/ValueInput
+@onready var save_button = $VBoxContainer/DataSection/SaveButton
+@onready var log_text = $VBoxContainer/LogContainer/LogText
+
+var current_email: String = \"\"
+var current_password: String = \"\"
+var access_token: String = \"\"
+var is_logged_in: bool = false
+
+const API_BASE_URL = \"http://localhost:3000\"
+
+func _ready():
+	update_ui_state()
+	add_log(\"アプリケーションが開始されました\")
+	load_user_data()
+
+func update_ui_state():
+	if is_logged_in:
+		status_label.text = \"ログイン中 (Email: \" + current_email + \")\"
+		register_button.disabled = true
+		login_button.text = \"ログアウト\"
+		save_button.disabled = false
+	else:
+		status_label.text = \"ログアウト中\"
+		register_button.disabled = false
+		login_button.text = \"ログイン\"
+		save_button.disabled = true
+
+func add_log(message: String):
+	var timestamp = Time.get_datetime_string_from_system()
+	log_text.text += \"[\" + timestamp + \"] \" + message + \"\\n\"
+	log_text.scroll_vertical = log_text.get_line_count()
+
+func generate_random_email() -> String:
+	var chars = \"abcdefghijklmnopqrstuvwxyz0123456789\"
+	var result = \"\"
+	for i in range(8):
+		result += chars[randi() % chars.length()]
+	return result + \"@example.com\"
+
+func generate_random_password() -> String:
+	var chars = \"abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789\"
+	var result = \"\"
+	for i in range(12):
+		result += chars[randi() % chars.length()]
+	return result
+
+func save_user_data():
+	var config = ConfigFile.new()
+	config.set_value(\"user\", \"email\", current_email)
+	config.set_value(\"user\", \"password\", current_password)
+	config.set_value(\"user\", \"access_token\", access_token)
+	config.save(\"user://user_data.cfg\")
+	add_log(\"ユーザーデータを保存しました\")
+
+func load_user_data() -> bool:
+	var config = ConfigFile.new()
+	var err = config.load(\"user://user_data.cfg\")
+	if err == OK:
+		current_email = config.get_value(\"user\", \"email\", \"\")
+		current_password = config.get_value(\"user\", \"password\", \"\")
+		access_token = config.get_value(\"user\", \"access_token\", \"\")
+		if current_email != \"\" and current_password != \"\":
+			add_log(\"保存されたユーザーデータを読み込みました\")
+			return true
+	add_log(\"保存されたユーザーデータが見つかりませんでした\")
+	return false
+
+func _on_register_button_pressed():
+	current_email = generate_random_email()
+	current_password = generate_random_password()
+	
+	add_log(\"新規ユーザーを生成しました\")
+	add_log(\"Email: \" + current_email)
+	add_log(\"Password: \" + current_password)
+	
+	var http_request = HTTPRequest.new()
+	add_child(http_request)
+	http_request.request_completed.connect(_on_register_completed)
+	
+	var json = JSON.new()
+	var data = {
+		\"email\": current_email,
+		\"password\": current_password
+	}
+	var json_string = json.stringify(data)
+	
+	var headers = [\"Content-Type: application/json\"]
+	var url = API_BASE_URL + \"/auth/signup\"
+	
+	add_log(\"ユーザー登録APIを呼び出し中...\")
+	http_request.request(url, headers, HTTPClient.METHOD_POST, json_string)
+
+func _on_register_completed(result: int, response_code: int, headers: PackedStringArray, body: PackedByteArray):
+	var http_request = get_children().back()
+	http_request.queue_free()
+	
+	if response_code == 200:
+		add_log(\"ユーザー登録が成功しました\")
+		var response_text = body.get_string_from_utf8()
+		var json = JSON.new()
+		var parse_result = json.parse(response_text)
+		if parse_result == OK:
+			var response_data = json.data
+			if \"session\" in response_data and response_data.session != null:
+				access_token = response_data.session.access_token
+				is_logged_in = true
+				save_user_data()
+				update_ui_state()
+			else:
+				add_log(\"レスポンスにセッション情報がありません\")
+		else:
+			add_log(\"レスポンスの解析に失敗しました\")
+	else:
+		add_log(\"ユーザー登録に失敗しました (コード: \" + str(response_code) + \")\")
+		var response_text = body.get_string_from_utf8()
+		add_log(\"エラー詳細: \" + response_text)
+
+func _on_login_button_pressed():
+	if is_logged_in:
+		# ログアウト処理
+		is_logged_in = false
+		current_email = \"\"
+		current_password = \"\"
+		access_token = \"\"
+		add_log(\"ログアウトしました\")
+		update_ui_state()
+		return
+	
+	# 保存されたユーザーデータを読み込み
+	if not load_user_data():
+		add_log(\"ログイン用のユーザーデータがありません。先に新規登録を行ってください。\")
+		return
+	
+	var http_request = HTTPRequest.new()
+	add_child(http_request)
+	http_request.request_completed.connect(_on_login_completed)
+	
+	var json = JSON.new()
+	var data = {
+		\"email\": current_email,
+		\"password\": current_password
+	}
+	var json_string = json.stringify(data)
+	
+	var headers = [\"Content-Type: application/json\"]
+	var url = API_BASE_URL + \"/auth/login\"
+	
+	add_log(\"ログインAPIを呼び出し中...\")
+	http_request.request(url, headers, HTTPClient.METHOD_POST, json_string)
+
+func _on_login_completed(result: int, response_code: int, headers: PackedStringArray, body: PackedByteArray):
+	var http_request = get_children().back()
+	http_request.queue_free()
+	
+	if response_code == 200:
+		add_log(\"ログインが成功しました\")
+		var response_text = body.get_string_from_utf8()
+		var json = JSON.new()
+		var parse_result = json.parse(response_text)
+		if parse_result == OK:
+			var response_data = json.data
+			if \"session\" in response_data and response_data.session != null:
+				access_token = response_data.session.access_token
+				is_logged_in = true
+				save_user_data()
+				update_ui_state()
+			else:
+				add_log(\"レスポンスにセッション情報がありません\")
+		else:
+			add_log(\"レスポンスの解析に失敗しました\")
+	else:
+		add_log(\"ログインに失敗しました (コード: \" + str(response_code) + \")\")
+		var response_text = body.get_string_from_utf8()
+		add_log(\"エラー詳細: \" + response_text)
+
+func _on_save_button_pressed():
+	if not is_logged_in:
+		add_log(\"データを保存するにはログインが必要です\")
+		return
+	
+	var key = key_input.text.strip_edges()
+	var value = value_input.text.strip_edges()
+	
+	if key == \"\":
+		add_log(\"キーを入力してください\")
+		return
+	
+	if value == \"\":
+		add_log(\"値を入力してください\")
+		return
+	
+	var http_request = HTTPRequest.new()
+	add_child(http_request)
+	http_request.request_completed.connect(_on_save_completed)
+	
+	var json = JSON.new()
+	var json_data = {}
+	var parse_result = json.parse(value)
+	if parse_result == OK:
+		json_data = json.data
+	else:
+		json_data = value
+	
+	var data = {
+		\"json_data\": json_data
+	}
+	var json_string = json.stringify(data)
+	
+	var headers = [
+		\"Content-Type: application/json\",
+		\"Authorization: Bearer \" + access_token
+	]
+	var url = API_BASE_URL + \"/data/\" + key
+	
+	add_log(\"データ保存APIを呼び出し中...\")
+	add_log(\"Key: \" + key + \", Value: \" + value)
+	http_request.request(url, headers, HTTPClient.METHOD_PUT, json_string)
+
+func _on_save_completed(result: int, response_code: int, headers: PackedStringArray, body: PackedByteArray):
+	var http_request = get_children().back()
+	http_request.queue_free()
+	
+	if response_code == 200:
+		add_log(\"データの保存が成功しました\")
+		key_input.text = \"\"
+		value_input.text = \"\"
+	else:
+		add_log(\"データの保存に失敗しました (コード: \" + str(response_code) + \")\")
+		var response_text = body.get_string_from_utf8()
+		add_log(\"エラー詳細: \" + response_text)
+"
+
+[node name="MainScene" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = SubResource("GDScript_7nygr")
+
+[node name="VBoxContainer" type="VBoxContainer" parent="."]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -200.0
+offset_top = -250.0
+offset_right = 200.0
+offset_bottom = 250.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Title" type="Label" parent="VBoxContainer"]
+layout_mode = 2
+text = "API Access Test"
+horizontal_alignment = 1
+
+[node name="HSeparator" type="HSeparator" parent="VBoxContainer"]
+layout_mode = 2
+
+[node name="UserSection" type="VBoxContainer" parent="VBoxContainer"]
+layout_mode = 2
+
+[node name="UserLabel" type="Label" parent="VBoxContainer/UserSection"]
+layout_mode = 2
+text = "ユーザー管理"
+horizontal_alignment = 1
+
+[node name="UserButtonsContainer" type="HBoxContainer" parent="VBoxContainer/UserSection"]
+layout_mode = 2
+
+[node name="RegisterButton" type="Button" parent="VBoxContainer/UserSection/UserButtonsContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "新規ユーザー登録"
+
+[node name="LoginButton" type="Button" parent="VBoxContainer/UserSection/UserButtonsContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "ログイン"
+
+[node name="StatusLabel" type="Label" parent="VBoxContainer/UserSection"]
+layout_mode = 2
+text = "ログアウト中"
+horizontal_alignment = 1
+
+[node name="HSeparator2" type="HSeparator" parent="VBoxContainer"]
+layout_mode = 2
+
+[node name="DataSection" type="VBoxContainer" parent="VBoxContainer"]
+layout_mode = 2
+
+[node name="DataLabel" type="Label" parent="VBoxContainer/DataSection"]
+layout_mode = 2
+text = "データ保存"
+horizontal_alignment = 1
+
+[node name="KeyContainer" type="HBoxContainer" parent="VBoxContainer/DataSection"]
+layout_mode = 2
+
+[node name="KeyLabel" type="Label" parent="VBoxContainer/DataSection/KeyContainer"]
+custom_minimum_size = Vector2(50, 0)
+layout_mode = 2
+text = "Key:"
+
+[node name="KeyInput" type="TextEdit" parent="VBoxContainer/DataSection/KeyContainer"]
+custom_minimum_size = Vector2(0, 30)
+layout_mode = 2
+size_flags_horizontal = 3
+placeholder_text = "キーを入力"
+
+[node name="ValueContainer" type="HBoxContainer" parent="VBoxContainer/DataSection"]
+layout_mode = 2
+
+[node name="ValueLabel" type="Label" parent="VBoxContainer/DataSection/ValueContainer"]
+custom_minimum_size = Vector2(50, 0)
+layout_mode = 2
+text = "Value:"
+
+[node name="ValueInput" type="TextEdit" parent="VBoxContainer/DataSection/ValueContainer"]
+custom_minimum_size = Vector2(0, 100)
+layout_mode = 2
+size_flags_horizontal = 3
+placeholder_text = "値を入力"
+
+[node name="SaveButton" type="Button" parent="VBoxContainer/DataSection"]
+layout_mode = 2
+text = "保存"
+
+[node name="HSeparator3" type="HSeparator" parent="VBoxContainer"]
+layout_mode = 2
+
+[node name="LogContainer" type="VBoxContainer" parent="VBoxContainer"]
+layout_mode = 2
+
+[node name="LogLabel" type="Label" parent="VBoxContainer/LogContainer"]
+layout_mode = 2
+text = "ログ"
+horizontal_alignment = 1
+
+[node name="LogText" type="TextEdit" parent="VBoxContainer/LogContainer"]
+custom_minimum_size = Vector2(0, 100)
+layout_mode = 2
+placeholder_text = "ログがここに表示されます"
+editable = false
+
+[connection signal="pressed" from="VBoxContainer/UserSection/UserButtonsContainer/RegisterButton" to="." method="_on_register_button_pressed"]
+[connection signal="pressed" from="VBoxContainer/UserSection/UserButtonsContainer/LoginButton" to="." method="_on_login_button_pressed"]
+[connection signal="pressed" from="VBoxContainer/DataSection/SaveButton" to="." method="_on_save_button_pressed"]

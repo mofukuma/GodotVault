@@ -1,0 +1,25 @@
+{
+  "name": "godotvault-api",
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "nodemon server.js",
+    "dev:local": "NODE_ENV=local nodemon server.js",
+    "start": "NODE_ENV=production node server.js",
+    "supabase:start": "supabase start",
+    "supabase:stop": "supabase stop",
+    "supabase:reset": "supabase db reset",
+    "supabase:link": "supabase link --project-ref YOUR_PROJECT_REF",
+    "supabase:push": "supabase db push",
+    "supabase:deploy": "supabase functions deploy"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.38.0",
+    "cors": "^2.8.5",
+    "dotenv": "^16.3.1",
+    "express": "^4.18.2"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.10"
+  }
+}
